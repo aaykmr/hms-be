@@ -31,6 +31,7 @@ export const authenticateToken = async (
 
     req.user = user;
     next();
+    return;
   } catch (error) {
     return res.status(403).json({ message: "Invalid token" });
   }
@@ -57,6 +58,7 @@ export const requireClearanceLevel = (requiredLevel: ClearanceLevel) => {
     }
 
     next();
+    return;
   };
 };
 
@@ -75,4 +77,5 @@ export const requireDoctor = (
   }
 
   next();
+  return;
 };

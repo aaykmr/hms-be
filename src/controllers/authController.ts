@@ -61,9 +61,11 @@ export const signup = async (req: Request, res: Response) => {
         department: user.department,
       },
     });
+    return;
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({ message: "Internal server error" });
+    return;
   }
 };
 
@@ -120,9 +122,11 @@ export const login = async (req: Request, res: Response) => {
         department: user.department,
       },
     });
+    return;
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Internal server error" });
+    return;
   }
 };
 
@@ -143,9 +147,11 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
         lastLogin: req.user.lastLogin,
       },
     });
+    return;
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({ message: "Internal server error" });
+    return;
   }
 };
 
@@ -173,8 +179,10 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
     await req.user.update({ password: newPassword });
 
     res.json({ message: "Password updated successfully" });
+    return;
   } catch (error) {
     console.error("Change password error:", error);
     res.status(500).json({ message: "Internal server error" });
+    return;
   }
 };

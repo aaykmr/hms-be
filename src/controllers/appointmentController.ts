@@ -79,9 +79,11 @@ export const createAppointment = async (req: Request, res: Response) => {
         createdAt: appointment.createdAt
       }
     });
+    return;
   } catch (error) {
     console.error('Create appointment error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -131,9 +133,11 @@ export const getDoctorAppointments = async (req: AuthRequest, res: Response) => 
         createdAt: appointment.createdAt
       }))
     });
+    return;
   } catch (error) {
     console.error('Get doctor appointments error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -164,9 +168,11 @@ export const updateAppointmentStatus = async (req: Request, res: Response) => {
         updatedAt: appointment.updatedAt
       }
     });
+    return;
   } catch (error) {
     console.error('Update appointment status error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -210,9 +216,11 @@ export const getAppointmentById = async (req: Request, res: Response) => {
         updatedAt: appointment.updatedAt
       }
     });
+    return;
   } catch (error) {
     console.error('Get appointment by ID error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -276,8 +284,10 @@ export const getDoctorDashboard = async (req: AuthRequest, res: Response) => {
         completionRate: totalThisMonth > 0 ? Math.round((completedThisMonth / totalThisMonth) * 100) : 0
       }
     });
+    return;
   } catch (error) {
     console.error('Get doctor dashboard error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };

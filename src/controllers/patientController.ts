@@ -58,9 +58,11 @@ export const registerPatient = async (req: Request, res: Response) => {
         medicalHistory: patient.medicalHistory
       }
     });
+    return;
   } catch (error) {
     console.error('Register patient error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -97,9 +99,11 @@ export const getPatientsByPhone = async (req: Request, res: Response) => {
         createdAt: patient.createdAt
       }))
     });
+    return;
   } catch (error) {
     console.error('Get patients by phone error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -131,9 +135,11 @@ export const getPatientById = async (req: Request, res: Response) => {
         updatedAt: patient.updatedAt
       }
     });
+    return;
   } catch (error) {
     console.error('Get patient by ID error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -169,9 +175,37 @@ export const searchPatients = async (req: Request, res: Response) => {
         createdAt: patient.createdAt
       }))
     });
+    return;
   } catch (error) {
     console.error('Search patients error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
+  }
+};
+
+export const getAllPatients = async (req: Request, res: Response) => {
+  try {
+    const patients = await Patient.findAll({
+      where: { isActive: true },
+      order: [['name', 'ASC']],
+      attributes: ['id', 'patientId', 'name', 'phoneNumber', 'dateOfBirth', 'gender']
+    });
+
+    res.json({
+      patients: patients.map(patient => ({
+        id: patient.id,
+        patientId: patient.patientId,
+        name: patient.name,
+        phoneNumber: patient.phoneNumber,
+        dateOfBirth: patient.dateOfBirth,
+        gender: patient.gender
+      }))
+    });
+    return;
+  } catch (error) {
+    console.error('Get all patients error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -206,8 +240,10 @@ export const updatePatient = async (req: Request, res: Response) => {
         updatedAt: patient.updatedAt
       }
     });
+    return;
   } catch (error) {
     console.error('Update patient error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };

@@ -4,8 +4,8 @@ import {
   authenticateToken,
   requireClearanceLevel,
   requireDoctor,
-  ClearanceLevel,
 } from "../middleware/auth";
+import { ClearanceLevel } from "../models/User";
 
 const router = Router();
 

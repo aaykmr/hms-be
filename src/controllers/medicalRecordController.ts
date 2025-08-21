@@ -91,9 +91,11 @@ export const createMedicalRecord = async (req: AuthRequest, res: Response) => {
         createdAt: medicalRecord.createdAt
       }
     });
+    return;
   } catch (error) {
     console.error('Create medical record error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -142,9 +144,11 @@ export const getMedicalRecord = async (req: Request, res: Response) => {
         updatedAt: medicalRecord.updatedAt
       }
     });
+    return;
   } catch (error) {
     console.error('Get medical record error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -190,9 +194,11 @@ export const updateMedicalRecord = async (req: AuthRequest, res: Response) => {
         updatedAt: medicalRecord.updatedAt
       }
     });
+    return;
   } catch (error) {
     console.error('Update medical record error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -231,9 +237,11 @@ export const getPatientMedicalHistory = async (req: Request, res: Response) => {
         createdAt: record.createdAt
       }))
     });
+    return;
   } catch (error) {
     console.error('Get patient medical history error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };
 
@@ -296,8 +304,10 @@ export const getDoctorMedicalRecords = async (req: AuthRequest, res: Response) =
         createdAt: record.createdAt
       }))
     });
+    return;
   } catch (error) {
     console.error('Get doctor medical records error:', error);
     res.status(500).json({ message: 'Internal server error' });
+    return;
   }
 };

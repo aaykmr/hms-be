@@ -1,5 +1,5 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/database';
+import { DataTypes, Model, Optional } from "sequelize";
+import sequelize from "../config/database";
 
 export interface PatientAttributes {
   id: number;
@@ -7,7 +7,7 @@ export interface PatientAttributes {
   phoneNumber: string;
   name: string;
   dateOfBirth?: Date;
-  gender?: 'male' | 'female' | 'other';
+  gender?: "male" | "female" | "other";
   address?: string;
   emergencyContact?: string;
   emergencyContactPhone?: string;
@@ -19,15 +19,22 @@ export interface PatientAttributes {
   updatedAt?: Date;
 }
 
-export interface PatientCreationAttributes extends Optional<PatientAttributes, 'id' | 'isActive' | 'createdAt' | 'updatedAt'> {}
+export interface PatientCreationAttributes
+  extends Optional<
+    PatientAttributes,
+    "id" | "isActive" | "createdAt" | "updatedAt"
+  > {}
 
-class Patient extends Model<PatientAttributes, PatientCreationAttributes> implements PatientAttributes {
+class Patient
+  extends Model<PatientAttributes, PatientCreationAttributes>
+  implements PatientAttributes
+{
   public id!: number;
   public patientId!: string;
   public phoneNumber!: string;
   public name!: string;
   public dateOfBirth?: Date;
-  public gender?: 'male' | 'female' | 'other';
+  public gender?: "male" | "female" | "other";
   public address?: string;
   public emergencyContact?: string;
   public emergencyContactPhone?: string;
@@ -73,7 +80,7 @@ Patient.init(
       allowNull: true,
     },
     gender: {
-      type: DataTypes.ENUM('male', 'female', 'other'),
+      type: DataTypes.ENUM("male", "female", "other"),
       allowNull: true,
     },
     address: {
@@ -108,13 +115,13 @@ Patient.init(
   },
   {
     sequelize,
-    tableName: 'patients',
+    tableName: "patients",
     indexes: [
       {
-        fields: ['phoneNumber'],
+        fields: ["phoneNumber"],
       },
       {
-        fields: ['patientId'],
+        fields: ["patientId"],
       },
     ],
   }

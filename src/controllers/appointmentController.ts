@@ -1,8 +1,8 @@
-import { Request, Response } from 'express';
-import Appointment, { AppointmentStatus } from '../models/Appointment';
-import Patient from '../models/Patient';
-import User from '../models/User';
-import { Op } from 'sequelize';
+import { Request, Response } from "express";
+import Appointment, { AppointmentStatus } from "../models/Appointment";
+import Patient from "../models/Patient";
+import User from "../models/User";
+import { Op } from "sequelize";
 
 interface AuthRequest extends Request {
   user?: any;
@@ -10,32 +10,31 @@ interface AuthRequest extends Request {
 
 export const createAppointment = async (req: Request, res: Response) => {
   try {
-    const {
-      patientId,
-      doctorId,
-      appointmentDate,
-      appointmentTime,
-      reason
-    } = req.body;
+    const { patientId, doctorId, appointmentDate, appointmentTime, reason } =
+      req.body;
 
     if (!patientId || !doctorId || !appointmentDate || !appointmentTime) {
-      return res.status(400).json({ message: 'Patient ID, doctor ID, date, and time are required' });
+      return res
+        .status(400)
+        .json({
+          message: "Patient ID, doctor ID, date, and time are required",
+        });
     }
 
     // Check if patient exists
     const patient = await Patient.findByPk(patientId);
     if (!patient) {
-      return res.status(404).json({ message: 'Patient not found' });
+      return res.status(404).json({ message: "Patient not found" });
     }
 
     // Check if doctor exists
     const doctor = await User.findByPk(doctorId);
     if (!doctor) {
-      return res.status(404).json({ message: 'Doctor not found' });
+      return res.status(404).json({ message: "Doctor not found" });
     }
 
     // Generate unique appointment number (format: A + date + random 4 digits)
-    const dateStr = appointmentDate.replace(/-/g, '');
+    const dateStr = appointmentDate.replace(/-/g, "");
     const random = Math.floor(Math.random() * 9000) + 1000;
     const appointmentNumber = `A${dateStr}${random}`;
 
@@ -46,13 +45,13 @@ export const createAppointment = async (req: Request, res: Response) => {
         appointmentDate,
         appointmentTime,
         status: {
-          [Op.in]: [AppointmentStatus.SCHEDULED, AppointmentStatus.IN_PROGRESS]
-        }
-      }
+          [Op.in]: [AppointmentStatus.SCHEDULED, AppointmentStatus.IN_PROGRESS],
+        },
+      },
     });
 
     if (existingAppointment) {
-      return res.status(400).json({ message: 'Time slot is already booked' });
+      return res.status(400).json({ message: "Time slot is already booked" });
     }
 
     // Create appointment
@@ -62,11 +61,11 @@ export const createAppointment = async (req: Request, res: Response) => {
       doctorId,
       appointmentDate,
       appointmentTime,
-      reason
+      reason,
     });
 
     res.status(201).json({
-      message: 'Appointment created successfully',
+      message: "Appointment created successfully",
       appointment: {
         id: appointment.id,
         appointmentNumber: appointment.appointmentNumber,
@@ -76,21 +75,24 @@ export const createAppointment = async (req: Request, res: Response) => {
         appointmentTime: appointment.appointmentTime,
         status: appointment.status,
         reason: appointment.reason,
-        createdAt: appointment.createdAt
-      }
+        createdAt: appointment.createdAt,
+      },
     });
     return;
   } catch (error) {
-    console.error('Create appointment error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Create appointment error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
 
-export const getDoctorAppointments = async (req: AuthRequest, res: Response) => {
+export const getDoctorAppointments = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'Authentication required' });
+      return res.status(401).json({ message: "Authentication required" });
     }
 
     const { date, status } = req.query;
@@ -111,11 +113,21 @@ export const getDoctorAppointments = async (req: AuthRequest, res: Response) => 
       include: [
         {
           model: Patient,
-          as: 'patient',
-          attributes: ['id', 'patientId', 'name', 'phoneNumber', 'dateOfBirth', 'gender']
-        }
+          as: "patient",
+          attributes: [
+            "id",
+            "patientId",
+            "name",
+            "phoneNumber",
+            "dateOfBirth",
+            "gender",
+          ],
+        },
       ],
-      order: [['appointmentDate', 'ASC'], ['appointmentTime', 'ASC']]
+      order: [
+        ["appointmentDate", "ASC"],
+        ["appointmentTime", "ASC"],
+      ],
     });
 
     res.json({
@@ -130,13 +142,13 @@ export const getDoctorAppointments = async (req: AuthRequest, res: Response) => 
         reason: appointment.reason,
         notes: appointment.notes,
         patient: appointment.patient,
-        createdAt: appointment.createdAt
-      }))
+        createdAt: appointment.createdAt,
+      })),
     });
     return;
   } catch (error) {
-    console.error('Get doctor appointments error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Get doctor appointments error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -147,31 +159,31 @@ export const updateAppointmentStatus = async (req: Request, res: Response) => {
     const { status, notes } = req.body;
 
     if (!status) {
-      return res.status(400).json({ message: 'Status is required' });
+      return res.status(400).json({ message: "Status is required" });
     }
 
     const appointment = await Appointment.findByPk(id);
 
     if (!appointment) {
-      return res.status(404).json({ message: 'Appointment not found' });
+      return res.status(404).json({ message: "Appointment not found" });
     }
 
     await appointment.update({ status, notes });
 
     res.json({
-      message: 'Appointment status updated successfully',
+      message: "Appointment status updated successfully",
       appointment: {
         id: appointment.id,
         appointmentNumber: appointment.appointmentNumber,
         status: appointment.status,
         notes: appointment.notes,
-        updatedAt: appointment.updatedAt
-      }
+        updatedAt: appointment.updatedAt,
+      },
     });
     return;
   } catch (error) {
-    console.error('Update appointment status error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Update appointment status error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -184,19 +196,29 @@ export const getAppointmentById = async (req: Request, res: Response) => {
       include: [
         {
           model: Patient,
-          as: 'patient',
-          attributes: ['id', 'patientId', 'name', 'phoneNumber', 'dateOfBirth', 'gender', 'bloodGroup', 'allergies', 'medicalHistory']
+          as: "patient",
+          attributes: [
+            "id",
+            "patientId",
+            "name",
+            "phoneNumber",
+            "dateOfBirth",
+            "gender",
+            "bloodGroup",
+            "allergies",
+            "medicalHistory",
+          ],
         },
         {
           model: User,
-          as: 'doctor',
-          attributes: ['id', 'staffId', 'name', 'department']
-        }
-      ]
+          as: "doctor",
+          attributes: ["id", "staffId", "name", "department"],
+        },
+      ],
     });
 
     if (!appointment) {
-      return res.status(404).json({ message: 'Appointment not found' });
+      return res.status(404).json({ message: "Appointment not found" });
     }
 
     res.json({
@@ -213,13 +235,13 @@ export const getAppointmentById = async (req: Request, res: Response) => {
         patient: appointment.patient,
         doctor: appointment.doctor,
         createdAt: appointment.createdAt,
-        updatedAt: appointment.updatedAt
-      }
+        updatedAt: appointment.updatedAt,
+      },
     });
     return;
   } catch (error) {
-    console.error('Get appointment by ID error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Get appointment by ID error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -227,18 +249,18 @@ export const getAppointmentById = async (req: Request, res: Response) => {
 export const getDoctorDashboard = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'Authentication required' });
+      return res.status(401).json({ message: "Authentication required" });
     }
 
     const doctorId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
     // Get today's appointments
     const todayAppointments = await Appointment.count({
       where: {
         doctorId,
-        appointmentDate: today
-      }
+        appointmentDate: today,
+      },
     });
 
     // Get completed appointments today
@@ -246,8 +268,8 @@ export const getDoctorDashboard = async (req: AuthRequest, res: Response) => {
       where: {
         doctorId,
         appointmentDate: today,
-        status: AppointmentStatus.COMPLETED
-      }
+        status: AppointmentStatus.COMPLETED,
+      },
     });
 
     // Get total appointments this month
@@ -259,9 +281,9 @@ export const getDoctorDashboard = async (req: AuthRequest, res: Response) => {
       where: {
         doctorId,
         appointmentDate: {
-          [Op.gte]: startOfMonth.toISOString().split('T')[0]
-        }
-      }
+          [Op.gte]: startOfMonth.toISOString().split("T")[0],
+        },
+      },
     });
 
     // Get completed appointments this month
@@ -269,10 +291,10 @@ export const getDoctorDashboard = async (req: AuthRequest, res: Response) => {
       where: {
         doctorId,
         appointmentDate: {
-          [Op.gte]: startOfMonth.toISOString().split('T')[0]
+          [Op.gte]: startOfMonth.toISOString().split("T")[0],
         },
-        status: AppointmentStatus.COMPLETED
-      }
+        status: AppointmentStatus.COMPLETED,
+      },
     });
 
     res.json({
@@ -281,13 +303,16 @@ export const getDoctorDashboard = async (req: AuthRequest, res: Response) => {
         completedToday,
         totalThisMonth,
         completedThisMonth,
-        completionRate: totalThisMonth > 0 ? Math.round((completedThisMonth / totalThisMonth) * 100) : 0
-      }
+        completionRate:
+          totalThisMonth > 0
+            ? Math.round((completedThisMonth / totalThisMonth) * 100)
+            : 0,
+      },
     });
     return;
   } catch (error) {
-    console.error('Get doctor dashboard error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Get doctor dashboard error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };

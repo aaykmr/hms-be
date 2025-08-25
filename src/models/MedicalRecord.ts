@@ -1,8 +1,8 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/database';
-import User from './User';
-import Patient from './Patient';
-import Appointment from './Appointment';
+import { DataTypes, Model, Optional } from "sequelize";
+import sequelize from "../config/database";
+import User from "./User";
+import Patient from "./Patient";
+import Appointment from "./Appointment";
 
 export interface MedicalRecordAttributes {
   id: number;
@@ -27,9 +27,13 @@ export interface MedicalRecordAttributes {
   doctor?: any;
 }
 
-export interface MedicalRecordCreationAttributes extends Optional<MedicalRecordAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface MedicalRecordCreationAttributes
+  extends Optional<MedicalRecordAttributes, "id" | "createdAt" | "updatedAt"> {}
 
-class MedicalRecord extends Model<MedicalRecordAttributes, MedicalRecordCreationAttributes> implements MedicalRecordAttributes {
+class MedicalRecord
+  extends Model<MedicalRecordAttributes, MedicalRecordCreationAttributes>
+  implements MedicalRecordAttributes
+{
   public id!: number;
   public appointmentId!: number;
   public patientId!: number;
@@ -64,7 +68,7 @@ MedicalRecord.init(
       allowNull: false,
       references: {
         model: Appointment,
-        key: 'id',
+        key: "id",
       },
     },
     patientId: {
@@ -72,7 +76,7 @@ MedicalRecord.init(
       allowNull: false,
       references: {
         model: Patient,
-        key: 'id',
+        key: "id",
       },
     },
     doctorId: {
@@ -80,7 +84,7 @@ MedicalRecord.init(
       allowNull: false,
       references: {
         model: User,
-        key: 'id',
+        key: "id",
       },
     },
     diagnosis: {
@@ -129,19 +133,19 @@ MedicalRecord.init(
   },
   {
     sequelize,
-    tableName: 'medical_records',
+    tableName: "medical_records",
     indexes: [
       {
-        fields: ['appointmentId'],
+        fields: ["appointmentId"],
       },
       {
-        fields: ['patientId'],
+        fields: ["patientId"],
       },
       {
-        fields: ['doctorId'],
+        fields: ["doctorId"],
       },
       {
-        fields: ['createdAt'],
+        fields: ["createdAt"],
       },
     ],
   }

@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
-import Patient from '../models/Patient';
-import { Op } from 'sequelize';
+import { Request, Response } from "express";
+import Patient from "../models/Patient";
+import { Op } from "sequelize";
 
 export const registerPatient = async (req: Request, res: Response) => {
   try {
@@ -14,11 +14,13 @@ export const registerPatient = async (req: Request, res: Response) => {
       emergencyContactPhone,
       bloodGroup,
       allergies,
-      medicalHistory
+      medicalHistory,
     } = req.body;
 
     if (!phoneNumber || !name) {
-      return res.status(400).json({ message: 'Phone number and name are required' });
+      return res
+        .status(400)
+        .json({ message: "Phone number and name are required" });
     }
 
     // Generate unique patient ID (format: P + timestamp + random 3 digits)
@@ -38,11 +40,11 @@ export const registerPatient = async (req: Request, res: Response) => {
       emergencyContactPhone,
       bloodGroup,
       allergies,
-      medicalHistory
+      medicalHistory,
     });
 
     res.status(201).json({
-      message: 'Patient registered successfully',
+      message: "Patient registered successfully",
       patient: {
         id: patient.id,
         patientId: patient.patientId,
@@ -55,13 +57,13 @@ export const registerPatient = async (req: Request, res: Response) => {
         emergencyContactPhone: patient.emergencyContactPhone,
         bloodGroup: patient.bloodGroup,
         allergies: patient.allergies,
-        medicalHistory: patient.medicalHistory
-      }
+        medicalHistory: patient.medicalHistory,
+      },
     });
     return;
   } catch (error) {
-    console.error('Register patient error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Register patient error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -71,15 +73,15 @@ export const getPatientsByPhone = async (req: Request, res: Response) => {
     const { phoneNumber } = req.params;
 
     if (!phoneNumber) {
-      return res.status(400).json({ message: 'Phone number is required' });
+      return res.status(400).json({ message: "Phone number is required" });
     }
 
     const patients = await Patient.findAll({
       where: {
         phoneNumber,
-        isActive: true
+        isActive: true,
       },
-      order: [['createdAt', 'DESC']]
+      order: [["createdAt", "DESC"]],
     });
 
     res.json({
@@ -96,13 +98,13 @@ export const getPatientsByPhone = async (req: Request, res: Response) => {
         bloodGroup: patient.bloodGroup,
         allergies: patient.allergies,
         medicalHistory: patient.medicalHistory,
-        createdAt: patient.createdAt
-      }))
+        createdAt: patient.createdAt,
+      })),
     });
     return;
   } catch (error) {
-    console.error('Get patients by phone error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Get patients by phone error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -114,7 +116,7 @@ export const getPatientById = async (req: Request, res: Response) => {
     const patient = await Patient.findByPk(id);
 
     if (!patient) {
-      return res.status(404).json({ message: 'Patient not found' });
+      return res.status(404).json({ message: "Patient not found" });
     }
 
     res.json({
@@ -132,13 +134,13 @@ export const getPatientById = async (req: Request, res: Response) => {
         allergies: patient.allergies,
         medicalHistory: patient.medicalHistory,
         createdAt: patient.createdAt,
-        updatedAt: patient.updatedAt
-      }
+        updatedAt: patient.updatedAt,
+      },
     });
     return;
   } catch (error) {
-    console.error('Get patient by ID error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Get patient by ID error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -148,7 +150,7 @@ export const searchPatients = async (req: Request, res: Response) => {
     const { query } = req.query;
 
     if (!query) {
-      return res.status(400).json({ message: 'Search query is required' });
+      return res.status(400).json({ message: "Search query is required" });
     }
 
     const patients = await Patient.findAll({
@@ -156,12 +158,12 @@ export const searchPatients = async (req: Request, res: Response) => {
         [Op.or]: [
           { name: { [Op.like]: `%${query}%` } },
           { patientId: { [Op.like]: `%${query}%` } },
-          { phoneNumber: { [Op.like]: `%${query}%` } }
+          { phoneNumber: { [Op.like]: `%${query}%` } },
         ],
-        isActive: true
+        isActive: true,
       },
-      order: [['name', 'ASC']],
-      limit: 20
+      order: [["name", "ASC"]],
+      limit: 20,
     });
 
     res.json({
@@ -172,13 +174,13 @@ export const searchPatients = async (req: Request, res: Response) => {
         name: patient.name,
         dateOfBirth: patient.dateOfBirth,
         gender: patient.gender,
-        createdAt: patient.createdAt
-      }))
+        createdAt: patient.createdAt,
+      })),
     });
     return;
   } catch (error) {
-    console.error('Search patients error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Search patients error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -187,8 +189,15 @@ export const getAllPatients = async (req: Request, res: Response) => {
   try {
     const patients = await Patient.findAll({
       where: { isActive: true },
-      order: [['name', 'ASC']],
-      attributes: ['id', 'patientId', 'name', 'phoneNumber', 'dateOfBirth', 'gender']
+      order: [["name", "ASC"]],
+      attributes: [
+        "id",
+        "patientId",
+        "name",
+        "phoneNumber",
+        "dateOfBirth",
+        "gender",
+      ],
     });
 
     res.json({
@@ -198,13 +207,13 @@ export const getAllPatients = async (req: Request, res: Response) => {
         name: patient.name,
         phoneNumber: patient.phoneNumber,
         dateOfBirth: patient.dateOfBirth,
-        gender: patient.gender
-      }))
+        gender: patient.gender,
+      })),
     });
     return;
   } catch (error) {
-    console.error('Get all patients error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Get all patients error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -217,13 +226,13 @@ export const updatePatient = async (req: Request, res: Response) => {
     const patient = await Patient.findByPk(id);
 
     if (!patient) {
-      return res.status(404).json({ message: 'Patient not found' });
+      return res.status(404).json({ message: "Patient not found" });
     }
 
     await patient.update(updateData);
 
     res.json({
-      message: 'Patient updated successfully',
+      message: "Patient updated successfully",
       patient: {
         id: patient.id,
         patientId: patient.patientId,
@@ -237,13 +246,13 @@ export const updatePatient = async (req: Request, res: Response) => {
         bloodGroup: patient.bloodGroup,
         allergies: patient.allergies,
         medicalHistory: patient.medicalHistory,
-        updatedAt: patient.updatedAt
-      }
+        updatedAt: patient.updatedAt,
+      },
     });
     return;
   } catch (error) {
-    console.error('Update patient error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Update patient error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };

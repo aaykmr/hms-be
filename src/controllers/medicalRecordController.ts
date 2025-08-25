@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import MedicalRecord from '../models/MedicalRecord';
-import Appointment, { AppointmentStatus } from '../models/Appointment';
-import Patient from '../models/Patient';
+import { Request, Response } from "express";
+import MedicalRecord from "../models/MedicalRecord";
+import Appointment, { AppointmentStatus } from "../models/Appointment";
+import Patient from "../models/Patient";
 
 interface AuthRequest extends Request {
   user?: any;
@@ -10,7 +10,7 @@ interface AuthRequest extends Request {
 export const createMedicalRecord = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'Authentication required' });
+      return res.status(401).json({ message: "Authentication required" });
     }
 
     const {
@@ -25,30 +25,42 @@ export const createMedicalRecord = async (req: AuthRequest, res: Response) => {
       vitalSigns,
       labResults,
       imagingResults,
-      notes
+      notes,
     } = req.body;
 
     if (!appointmentId || !patientId || !diagnosis) {
-      return res.status(400).json({ message: 'Appointment ID, patient ID, and diagnosis are required' });
+      return res
+        .status(400)
+        .json({
+          message: "Appointment ID, patient ID, and diagnosis are required",
+        });
     }
 
     // Check if appointment exists and belongs to the doctor
     const appointment = await Appointment.findByPk(appointmentId);
     if (!appointment) {
-      return res.status(404).json({ message: 'Appointment not found' });
+      return res.status(404).json({ message: "Appointment not found" });
     }
 
     if (appointment.doctorId !== req.user.id) {
-      return res.status(403).json({ message: 'You can only create medical records for your appointments' });
+      return res
+        .status(403)
+        .json({
+          message: "You can only create medical records for your appointments",
+        });
     }
 
     // Check if medical record already exists for this appointment
     const existingRecord = await MedicalRecord.findOne({
-      where: { appointmentId }
+      where: { appointmentId },
     });
 
     if (existingRecord) {
-      return res.status(400).json({ message: 'Medical record already exists for this appointment' });
+      return res
+        .status(400)
+        .json({
+          message: "Medical record already exists for this appointment",
+        });
     }
 
     // Create medical record
@@ -65,14 +77,14 @@ export const createMedicalRecord = async (req: AuthRequest, res: Response) => {
       vitalSigns,
       labResults,
       imagingResults,
-      notes
+      notes,
     });
 
     // Update appointment status to completed
     await appointment.update({ status: AppointmentStatus.COMPLETED });
 
     res.status(201).json({
-      message: 'Medical record created successfully',
+      message: "Medical record created successfully",
       medicalRecord: {
         id: medicalRecord.id,
         appointmentId: medicalRecord.appointmentId,
@@ -88,13 +100,13 @@ export const createMedicalRecord = async (req: AuthRequest, res: Response) => {
         labResults: medicalRecord.labResults,
         imagingResults: medicalRecord.imagingResults,
         notes: medicalRecord.notes,
-        createdAt: medicalRecord.createdAt
-      }
+        createdAt: medicalRecord.createdAt,
+      },
     });
     return;
   } catch (error) {
-    console.error('Create medical record error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Create medical record error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -107,20 +119,30 @@ export const getMedicalRecord = async (req: Request, res: Response) => {
       include: [
         {
           model: Appointment,
-          as: 'appointment',
+          as: "appointment",
           include: [
             {
               model: Patient,
-              as: 'patient',
-              attributes: ['id', 'patientId', 'name', 'phoneNumber', 'dateOfBirth', 'gender', 'bloodGroup', 'allergies', 'medicalHistory']
-            }
-          ]
-        }
-      ]
+              as: "patient",
+              attributes: [
+                "id",
+                "patientId",
+                "name",
+                "phoneNumber",
+                "dateOfBirth",
+                "gender",
+                "bloodGroup",
+                "allergies",
+                "medicalHistory",
+              ],
+            },
+          ],
+        },
+      ],
     });
 
     if (!medicalRecord) {
-      return res.status(404).json({ message: 'Medical record not found' });
+      return res.status(404).json({ message: "Medical record not found" });
     }
 
     res.json({
@@ -141,13 +163,13 @@ export const getMedicalRecord = async (req: Request, res: Response) => {
         notes: medicalRecord.notes,
         appointment: medicalRecord.appointment,
         createdAt: medicalRecord.createdAt,
-        updatedAt: medicalRecord.updatedAt
-      }
+        updatedAt: medicalRecord.updatedAt,
+      },
     });
     return;
   } catch (error) {
-    console.error('Get medical record error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Get medical record error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -155,7 +177,7 @@ export const getMedicalRecord = async (req: Request, res: Response) => {
 export const updateMedicalRecord = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'Authentication required' });
+      return res.status(401).json({ message: "Authentication required" });
     }
 
     const { id } = req.params;
@@ -164,18 +186,20 @@ export const updateMedicalRecord = async (req: AuthRequest, res: Response) => {
     const medicalRecord = await MedicalRecord.findByPk(id);
 
     if (!medicalRecord) {
-      return res.status(404).json({ message: 'Medical record not found' });
+      return res.status(404).json({ message: "Medical record not found" });
     }
 
     // Check if the doctor owns this medical record
     if (medicalRecord.doctorId !== req.user.id) {
-      return res.status(403).json({ message: 'You can only update your own medical records' });
+      return res
+        .status(403)
+        .json({ message: "You can only update your own medical records" });
     }
 
     await medicalRecord.update(updateData);
 
     res.json({
-      message: 'Medical record updated successfully',
+      message: "Medical record updated successfully",
       medicalRecord: {
         id: medicalRecord.id,
         appointmentId: medicalRecord.appointmentId,
@@ -191,13 +215,13 @@ export const updateMedicalRecord = async (req: AuthRequest, res: Response) => {
         labResults: medicalRecord.labResults,
         imagingResults: medicalRecord.imagingResults,
         notes: medicalRecord.notes,
-        updatedAt: medicalRecord.updatedAt
-      }
+        updatedAt: medicalRecord.updatedAt,
+      },
     });
     return;
   } catch (error) {
-    console.error('Update medical record error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Update medical record error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
@@ -211,11 +235,15 @@ export const getPatientMedicalHistory = async (req: Request, res: Response) => {
       include: [
         {
           model: Appointment,
-          as: 'appointment',
-          attributes: ['appointmentNumber', 'appointmentDate', 'appointmentTime']
-        }
+          as: "appointment",
+          attributes: [
+            "appointmentNumber",
+            "appointmentDate",
+            "appointmentTime",
+          ],
+        },
       ],
-      order: [['createdAt', 'DESC']]
+      order: [["createdAt", "DESC"]],
     });
 
     res.json({
@@ -234,21 +262,24 @@ export const getPatientMedicalHistory = async (req: Request, res: Response) => {
         imagingResults: record.imagingResults,
         notes: record.notes,
         appointment: record.appointment,
-        createdAt: record.createdAt
-      }))
+        createdAt: record.createdAt,
+      })),
     });
     return;
   } catch (error) {
-    console.error('Get patient medical history error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Get patient medical history error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
 
-export const getDoctorMedicalRecords = async (req: AuthRequest, res: Response) => {
+export const getDoctorMedicalRecords = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'Authentication required' });
+      return res.status(401).json({ message: "Authentication required" });
     }
 
     const doctorId = req.user.id;
@@ -262,8 +293,10 @@ export const getDoctorMedicalRecords = async (req: AuthRequest, res: Response) =
 
     if (date) {
       whereClause.createdAt = {
-        [require('sequelize').Op.gte]: new Date(date as string),
-        [require('sequelize').Op.lt]: new Date(new Date(date as string).getTime() + 24 * 60 * 60 * 1000)
+        [require("sequelize").Op.gte]: new Date(date as string),
+        [require("sequelize").Op.lt]: new Date(
+          new Date(date as string).getTime() + 24 * 60 * 60 * 1000
+        ),
       };
     }
 
@@ -272,17 +305,24 @@ export const getDoctorMedicalRecords = async (req: AuthRequest, res: Response) =
       include: [
         {
           model: Appointment,
-          as: 'appointment',
+          as: "appointment",
           include: [
             {
               model: Patient,
-              as: 'patient',
-              attributes: ['id', 'patientId', 'name', 'phoneNumber', 'dateOfBirth', 'gender']
-            }
-          ]
-        }
+              as: "patient",
+              attributes: [
+                "id",
+                "patientId",
+                "name",
+                "phoneNumber",
+                "dateOfBirth",
+                "gender",
+              ],
+            },
+          ],
+        },
       ],
-      order: [['createdAt', 'DESC']]
+      order: [["createdAt", "DESC"]],
     });
 
     res.json({
@@ -301,13 +341,13 @@ export const getDoctorMedicalRecords = async (req: AuthRequest, res: Response) =
         imagingResults: record.imagingResults,
         notes: record.notes,
         appointment: record.appointment,
-        createdAt: record.createdAt
-      }))
+        createdAt: record.createdAt,
+      })),
     });
     return;
   } catch (error) {
-    console.error('Get doctor medical records error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Get doctor medical records error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };

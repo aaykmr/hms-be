@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import MedicalRecord from "../models/MedicalRecord";
 import Appointment, { AppointmentStatus } from "../models/Appointment";
 import Patient from "../models/Patient";
+import ActivityLogger from "../services/activityLogger";
 
 interface AuthRequest extends Request {
   user?: any;
@@ -63,6 +64,9 @@ export const createMedicalRecord = async (req: AuthRequest, res: Response) => {
         });
     }
 
+    // Get patient name for logging
+    const patient = await Patient.findByPk(patientId);
+
     // Create medical record
     const medicalRecord = await MedicalRecord.create({
       appointmentId,
@@ -82,6 +86,15 @@ export const createMedicalRecord = async (req: AuthRequest, res: Response) => {
 
     // Update appointment status to completed
     await appointment.update({ status: AppointmentStatus.COMPLETED });
+
+    // Log medical record creation
+    await ActivityLogger.logMedicalRecordCreation(
+      req.user.id,
+      medicalRecord.id,
+      patient?.name || "Unknown Patient",
+      diagnosis,
+      req
+    );
 
     res.status(201).json({
       message: "Medical record created successfully",
@@ -347,6 +360,142 @@ export const getDoctorMedicalRecords = async (
     return;
   } catch (error) {
     console.error("Get doctor medical records error:", error);
+    res.status(500).json({ message: "Internal server error" });
+    return;
+  }
+};
+
+export const searchMedicalRecords = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const {
+      patientId,
+      patientName,
+      diagnosis,
+      dateFrom,
+      dateTo,
+      doctorId,
+      hasFollowUp,
+      limit = 50,
+      page = 1,
+    } = req.query;
+
+    const whereClause: any = {};
+    const includeClause: any[] = [
+      {
+        model: Appointment,
+        as: "appointment",
+        include: [
+          {
+            model: Patient,
+            as: "patient",
+            attributes: [
+              "id",
+              "patientId",
+              "name",
+              "phoneNumber",
+              "dateOfBirth",
+              "gender",
+              "bloodGroup",
+            ],
+          },
+        ],
+      },
+    ];
+
+    // Filter by patient ID
+    if (patientId) {
+      whereClause.patientId = patientId;
+    }
+
+    // Filter by doctor ID (L3+ can see all, others see only their own)
+    if (req.user.clearanceLevel === "L3" || req.user.clearanceLevel === "L4") {
+      if (doctorId) {
+        whereClause.doctorId = doctorId;
+      }
+    } else {
+      whereClause.doctorId = req.user.id;
+    }
+
+    // Filter by diagnosis (partial match)
+    if (diagnosis) {
+      whereClause.diagnosis = {
+        [require("sequelize").Op.iLike]: `%${diagnosis}%`,
+      };
+    }
+
+    // Filter by date range
+    if (dateFrom || dateTo) {
+      whereClause.createdAt = {};
+      if (dateFrom) {
+        whereClause.createdAt[require("sequelize").Op.gte] = new Date(dateFrom as string);
+      }
+      if (dateTo) {
+        whereClause.createdAt[require("sequelize").Op.lte] = new Date(dateTo as string);
+      }
+    }
+
+    // Filter by follow-up status
+    if (hasFollowUp === "true") {
+      whereClause.followUpDate = {
+        [require("sequelize").Op.ne]: null,
+      };
+    } else if (hasFollowUp === "false") {
+      whereClause.followUpDate = null;
+    }
+
+    // Search by patient name (if patientName is provided)
+    if (patientName) {
+      includeClause[0].include[0].where = {
+        name: {
+          [require("sequelize").Op.iLike]: `%${patientName}%`,
+        },
+      };
+    }
+
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+
+    const { count, rows: medicalRecords } = await MedicalRecord.findAndCountAll({
+      where: whereClause,
+      include: includeClause,
+      order: [["createdAt", "DESC"]],
+      limit: parseInt(limit as string),
+      offset,
+    });
+
+    res.json({
+      medicalRecords: medicalRecords.map(record => ({
+        id: record.id,
+        appointmentId: record.appointmentId,
+        patientId: record.patientId,
+        doctorId: record.doctorId,
+        diagnosis: record.diagnosis,
+        symptoms: record.symptoms,
+        prescription: record.prescription,
+        treatmentPlan: record.treatmentPlan,
+        followUpDate: record.followUpDate,
+        followUpNotes: record.followUpNotes,
+        vitalSigns: record.vitalSigns,
+        labResults: record.labResults,
+        imagingResults: record.imagingResults,
+        notes: record.notes,
+        appointment: record.appointment,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      })),
+      pagination: {
+        total: count,
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        totalPages: Math.ceil(count / parseInt(limit as string)),
+      },
+    });
+    return;
+  } catch (error) {
+    console.error("Search medical records error:", error);
     res.status(500).json({ message: "Internal server error" });
     return;
   }

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import User, { ClearanceLevel } from "../models/User";
+import ActivityLogger from "../services/activityLogger";
 
 interface AuthRequest extends Request {
   user?: any;
@@ -9,8 +10,7 @@ interface AuthRequest extends Request {
 
 export const signup = async (req: Request, res: Response) => {
   try {
-    const { staffId, name, email, password, clearanceLevel, department } =
-      req.body;
+    const { staffId, name, email, password, department } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -25,15 +25,18 @@ export const signup = async (req: Request, res: Response) => {
         .json({ message: "User with this email or staff ID already exists" });
     }
 
-    // Create new user
+    // Create new user with L1 clearance level (default)
     const user = await User.create({
       staffId,
       name,
       email,
       password,
-      clearanceLevel: clearanceLevel || ClearanceLevel.L1,
+      clearanceLevel: ClearanceLevel.L1, // Always L1 for new signups
       department,
     });
+
+    // Log user registration
+    await ActivityLogger.logUserRegistration(user.id, staffId, email, req);
 
     // Generate JWT token
     const token = jwt.sign(
@@ -110,6 +113,9 @@ export const login = async (req: Request, res: Response) => {
     // Update last login
     await user.update({ lastLogin: new Date() });
 
+    // Log user login
+    await ActivityLogger.logUserLogin(user.id, staffId, req);
+
     res.json({
       message: "Login successful",
       token,
@@ -177,6 +183,9 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
 
     // Update password
     await req.user.update({ password: newPassword });
+
+    // Log password change
+    await ActivityLogger.logPasswordChange(req.user.id, req.user.staffId, req);
 
     res.json({ message: "Password updated successfully" });
     return;

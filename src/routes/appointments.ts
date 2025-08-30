@@ -26,6 +26,13 @@ router.get(
   appointmentController.getDoctorAppointments
 );
 
+// Get doctor's appointments by week (L2 clearance required - doctors)
+router.get(
+  "/doctor/week",
+  requireDoctor,
+  appointmentController.getDoctorAppointmentsByWeek
+);
+
 // Get doctor dashboard (L2 clearance required - doctors)
 router.get(
   "/doctor/dashboard",

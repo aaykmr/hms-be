@@ -15,4 +15,18 @@ router.get(
   userController.getDoctors
 );
 
+// Get all users (L3/L4 clearance required)
+router.get(
+  "/all",
+  requireClearanceLevel(ClearanceLevel.L3),
+  userController.getAllUsers
+);
+
+// Update user clearance level (L3/L4 clearance required)
+router.put(
+  "/:userId/clearance",
+  requireClearanceLevel(ClearanceLevel.L3),
+  userController.updateUserClearance
+);
+
 export default router;

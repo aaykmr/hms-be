@@ -1,8 +1,13 @@
 import { Request, Response } from "express";
 import Patient from "../models/Patient";
 import { Op } from "sequelize";
+import ActivityLogger from "../services/activityLogger";
 
-export const registerPatient = async (req: Request, res: Response) => {
+interface AuthRequest extends Request {
+  user?: any;
+}
+
+export const registerPatient = async (req: AuthRequest, res: Response) => {
   try {
     const {
       phoneNumber,
@@ -42,6 +47,16 @@ export const registerPatient = async (req: Request, res: Response) => {
       allergies,
       medicalHistory,
     });
+
+    // Log patient registration if user is authenticated
+    if (req.user) {
+      await ActivityLogger.logPatientRegistration(
+        req.user.id,
+        patientId,
+        name,
+        req
+      );
+    }
 
     res.status(201).json({
       message: "Patient registered successfully",
@@ -218,7 +233,7 @@ export const getAllPatients = async (req: Request, res: Response) => {
   }
 };
 
-export const updatePatient = async (req: Request, res: Response) => {
+export const updatePatient = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -230,6 +245,16 @@ export const updatePatient = async (req: Request, res: Response) => {
     }
 
     await patient.update(updateData);
+
+    // Log patient update if user is authenticated
+    if (req.user) {
+      await ActivityLogger.logPatientUpdate(
+        req.user.id,
+        patient.patientId,
+        updateData,
+        req
+      );
+    }
 
     res.json({
       message: "Patient updated successfully",

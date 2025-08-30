@@ -12,6 +12,7 @@ import userRoutes from "./routes/users";
 import patientRoutes from "./routes/patients";
 import appointmentRoutes from "./routes/appointments";
 import medicalRecordRoutes from "./routes/medicalRecords";
+import activityLogRoutes from "./routes/activityLogs";
 
 // Load environment variables
 dotenv.config();
@@ -42,6 +43,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/medical-records", medicalRecordRoutes);
+app.use("/api/activity-logs", activityLogRoutes);
 
 // 404 handler
 app.use("*", (req, res) => {

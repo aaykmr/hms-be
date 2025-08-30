@@ -3,22 +3,21 @@ import Appointment, { AppointmentStatus } from "../models/Appointment";
 import Patient from "../models/Patient";
 import User from "../models/User";
 import { Op } from "sequelize";
+import ActivityLogger from "../services/activityLogger";
 
 interface AuthRequest extends Request {
   user?: any;
 }
 
-export const createAppointment = async (req: Request, res: Response) => {
+export const createAppointment = async (req: AuthRequest, res: Response) => {
   try {
     const { patientId, doctorId, appointmentDate, appointmentTime, reason } =
       req.body;
 
     if (!patientId || !doctorId || !appointmentDate || !appointmentTime) {
-      return res
-        .status(400)
-        .json({
-          message: "Patient ID, doctor ID, date, and time are required",
-        });
+      return res.status(400).json({
+        message: "Patient ID, doctor ID, date, and time are required",
+      });
     }
 
     // Check if patient exists
@@ -63,6 +62,17 @@ export const createAppointment = async (req: Request, res: Response) => {
       appointmentTime,
       reason,
     });
+
+    // Log appointment creation if user is authenticated
+    if (req.user) {
+      await ActivityLogger.logAppointmentCreation(
+        req.user.id,
+        appointmentNumber,
+        patient.name,
+        appointmentDate,
+        req
+      );
+    }
 
     res.status(201).json({
       message: "Appointment created successfully",
@@ -153,7 +163,10 @@ export const getDoctorAppointments = async (
   }
 };
 
-export const updateAppointmentStatus = async (req: Request, res: Response) => {
+export const updateAppointmentStatus = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { id } = req.params;
     const { status, notes } = req.body;
@@ -168,7 +181,20 @@ export const updateAppointmentStatus = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Appointment not found" });
     }
 
+    const oldStatus = appointment.status;
+
     await appointment.update({ status, notes });
+
+    // Log appointment status change if user is authenticated
+    if (req.user) {
+      await ActivityLogger.logAppointmentStatusChange(
+        req.user.id,
+        appointment.appointmentNumber,
+        oldStatus,
+        status,
+        req
+      );
+    }
 
     res.json({
       message: "Appointment status updated successfully",
@@ -312,6 +338,80 @@ export const getDoctorDashboard = async (req: AuthRequest, res: Response) => {
     return;
   } catch (error) {
     console.error("Get doctor dashboard error:", error);
+    res.status(500).json({ message: "Internal server error" });
+    return;
+  }
+};
+
+export const getDoctorAppointmentsByWeek = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const { startDate } = req.query;
+    const doctorId = req.user.id;
+
+    if (!startDate) {
+      return res.status(400).json({ message: "Start date is required" });
+    }
+
+    // Calculate end date (7 days from start date)
+    const start = new Date(startDate as string);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+
+    const appointments = await Appointment.findAll({
+      where: {
+        doctorId,
+        appointmentDate: {
+          [Op.between]: [
+            start.toISOString().split("T")[0],
+            end.toISOString().split("T")[0],
+          ],
+        },
+      },
+      include: [
+        {
+          model: Patient,
+          as: "patient",
+          attributes: [
+            "id",
+            "patientId",
+            "name",
+            "phoneNumber",
+            "dateOfBirth",
+            "gender",
+          ],
+        },
+      ],
+      order: [
+        ["appointmentDate", "ASC"],
+        ["appointmentTime", "ASC"],
+      ],
+    });
+
+    res.json({
+      appointments: appointments.map(appointment => ({
+        id: appointment.id,
+        appointmentNumber: appointment.appointmentNumber,
+        patientId: appointment.patientId,
+        doctorId: appointment.doctorId,
+        appointmentDate: appointment.appointmentDate,
+        appointmentTime: appointment.appointmentTime,
+        status: appointment.status,
+        reason: appointment.reason,
+        notes: appointment.notes,
+        patient: appointment.patient,
+        createdAt: appointment.createdAt,
+      })),
+    });
+    return;
+  } catch (error) {
+    console.error("Get doctor appointments by week error:", error);
     res.status(500).json({ message: "Internal server error" });
     return;
   }

@@ -29,6 +29,13 @@ router.get(
   medicalRecordController.getDoctorMedicalRecords
 );
 
+// Search and filter medical records (L2 clearance required)
+router.get(
+  "/search",
+  requireClearanceLevel(ClearanceLevel.L2),
+  medicalRecordController.searchMedicalRecords
+);
+
 // Get medical record by ID (L2 clearance required)
 router.get(
   "/:id",

@@ -26,6 +26,12 @@ export enum ActivityType {
   MEDICAL_RECORD_UPDATED = "medical_record_updated",
   MEDICAL_RECORD_VIEWED = "medical_record_viewed",
 
+  // Patient Monitoring
+  MONITOR_BED_ADDED = "monitor_bed_added",
+  MONITOR_BED_REMOVED = "monitor_bed_removed",
+  MONITOR_PATIENT_UPDATED = "monitor_patient_updated",
+  MONITOR_BED_STATUS_CHANGED = "monitor_bed_status_changed",
+
   // System Events
   SYSTEM_ERROR = "system_error",
   ACCESS_DENIED = "access_denied",

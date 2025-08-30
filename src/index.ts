@@ -13,6 +13,7 @@ import patientRoutes from "./routes/patients";
 import appointmentRoutes from "./routes/appointments";
 import medicalRecordRoutes from "./routes/medicalRecords";
 import activityLogRoutes from "./routes/activityLogs";
+import monitoringRoutes from "./routes/monitoring";
 
 // Load environment variables
 dotenv.config();
@@ -44,6 +45,7 @@ app.use("/api/patients", patientRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/medical-records", medicalRecordRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
+app.use("/api/monitoring", monitoringRoutes);
 
 // 404 handler
 app.use("*", (req, res) => {
@@ -74,7 +76,8 @@ const startServer = async () => {
     console.log("Database connection established successfully.");
 
     // Sync database (create tables if they don't exist)
-    await sequelize.sync({ alter: true });
+    // Temporarily disabled alter to avoid MySQL key limit issues
+    await sequelize.sync({ force: false });
     console.log("Database synchronized successfully.");
 
     // Start server

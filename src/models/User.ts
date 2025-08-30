@@ -60,7 +60,6 @@ User.init(
     staffId: {
       type: DataTypes.STRING(20),
       allowNull: false,
-      unique: true,
       validate: {
         notEmpty: true,
       },
@@ -75,7 +74,6 @@ User.init(
     email: {
       type: DataTypes.STRING(100),
       allowNull: false,
-      unique: true,
       validate: {
         isEmail: true,
       },
